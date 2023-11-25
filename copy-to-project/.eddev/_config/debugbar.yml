@@ -1,0 +1,8 @@
+---
+Name: eddev-debugbar
+Only:
+  moduleexists: lekoala/silverstripe-debugbar
+---
+LeKoala\DebugBar\DebugBar:
+  enabled_in_admin: false
+  check_local_ip: false

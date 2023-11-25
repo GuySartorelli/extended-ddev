@@ -2,6 +2,7 @@
 <?php declare(strict_types=1);
 
 use GuySartorelli\DdevWrapper\Application;
+use GuySartorelli\ExtendedDdev\Command\Create;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Filesystem\Path;
 
@@ -28,4 +29,7 @@ $envConfig->bootEnv($envFilePath);
 
 // Start app
 $application = new Application('eddev');
+$application->addCommands([
+    new Create(),
+]);
 $application->run();
