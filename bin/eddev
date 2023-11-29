@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
-use GuySartorelli\DdevWrapper\Application\Application;
+use GuySartorelli\DdevWrapper\Application;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Filesystem\Path;
 
