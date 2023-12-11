@@ -3,6 +3,7 @@
 
 use GuySartorelli\DdevWrapper\Application;
 use GuySartorelli\ExtendedDdev\Command\Create;
+use GuySartorelli\ExtendedDdev\Command\Destroy;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Filesystem\Path;
 
@@ -31,5 +32,6 @@ $envConfig->bootEnv($envFilePath);
 $application = new Application('eddev');
 $application->addCommands([
     new Create(),
+    new Destroy(),
 ]);
 $application->run();
