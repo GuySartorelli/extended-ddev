@@ -147,6 +147,9 @@ class Create extends BaseCommand
             $this->output->warning("Couldn't build database - run `$appName exec sake dev/build`");
         }
 
+        $details = DDevHelper::runJson('describe');
+        $this->output->success("Created environment {$details->name}. Go to {$details->primary_url}");
+
         return $success ? self::SUCCESS : self::FAILURE;
     }
 
