@@ -141,10 +141,10 @@ class Create extends BaseCommand
         }
 
         // @TODO only interactive on verbose
-        $success = DDevHelper::runInteractive('sake', ['dev/build']);
+        $success = DDevHelper::runInteractive('exec', ['sake', 'dev/build']);
         if (!$success) {
             $appName = $this->getApplication()->getName();
-            $this->output->warning("Couldn't build database - run `$appName sake dev/build`");
+            $this->output->warning("Couldn't build database - run `$appName exec sake dev/build`");
         }
 
         return $success ? self::SUCCESS : self::FAILURE;
