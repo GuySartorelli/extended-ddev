@@ -224,6 +224,12 @@ class Create extends BaseCommand
             $this->output->warning('Could not add DDEV addon "ddev/ddev-selenium-standalone-chrome" - add that manually.');
         }
 
+        // @TODO only run interactive when running verbosely - otherwise use a progressbar.
+        $hasDbAdmin = DDevHelper::runInteractive('get', ['ddev/ddev-adminer']);
+        if (!$hasDbAdmin) {
+            $this->output->warning('Could not add DDEV addon "ddev/ddev-adminer" - add that manually.');
+        }
+
         return $success;
     }
 
