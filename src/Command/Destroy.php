@@ -11,16 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-/*
-    @TODO
-    * Argument is a DDEV project name as seen in `ddev list`
-    * Autocompletion would be great here
-    * Destroy it
-      * Run `ddev clean <projectName>`
-      * Run `ddev delete <projectName> -Oy`
-      * Delete the project root dir
-*/
-
 /**
  * Command for creating a new opinionated Silverstripe CMS DDEV project.
  */

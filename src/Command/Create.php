@@ -26,17 +26,19 @@ use Symfony\Component\Filesystem\Path;
 /*
     @TODO
 
-    - Mirror functionality of dev-tools create, but this time with DDEV
-        - Sort out verbosity vs interactivity (probably steal from the other local dev project)
-          - MUST allow verbosity for custom commands
-          - MUST NOT enforce verbosity for pass-through commands
-        - See if any ddev specific stuff should be added
-        - See what improvements can be taken from the other local dev project
-        - Make sure behat, phpunit, xdebug all work out of the gate
-        - Check mailpit, or see if you need mailhog, or etc
+    - Add behat helper command (probably just as a global ddev command though)
+    - Add phpunit helper command
+    - Sort out verbosity vs interactivity (probably steal from the other local dev project)
+        - MUST allow verbosity for custom commands
+        - MUST NOT enforce verbosity for pass-through commands
+    - See if any ddev specific stuff should be added
+    - See what improvements can be taken from the other local dev projects
+    - Check mailpit, or see if you need mailhog, or etc
 
     - Add more global commands:
-        - Destroy
+        - add-pr
+        - lint-php (and start using it please)
+        - find modules with un-pushed changes (could be staged, unstaged, etc - normally stuff I do via find-and-replace)
         DO I NEED THESE? Or is DDEV quick and simple enough as-is?
         - Attach (with all of the relevant defaults/settings)
         - Detach (with all of the relevant defaults/settings)
