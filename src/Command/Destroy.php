@@ -92,7 +92,9 @@ class Destroy extends BaseCommand
         $this->addArgument(
             'project-name',
             InputArgument::REQUIRED,
-            'The name of the project to destroy - use ddev list if you aren\'t sure.'
+            'The name of the project to destroy - use ddev list if you aren\'t sure.',
+            null,
+            fn () => array_map(fn ($item) => "{$item->name}\t{$item->status}", DDevHelper::runJson('list'))
         );
     }
 }
