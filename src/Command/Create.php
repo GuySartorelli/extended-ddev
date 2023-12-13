@@ -26,26 +26,18 @@ use Symfony\Component\Filesystem\Path;
 /*
     @TODO
 
-    - Add phpunit helper command
     - Sort out verbosity vs interactivity (probably steal from the other local dev project)
         - MUST allow verbosity for custom commands
         - MUST NOT enforce verbosity for pass-through commands
     - See if any ddev specific stuff should be added
     - See what improvements can be taken from the other local dev projects
-    - Check mailpit, or see if you need mailhog, or etc
 
     - Add more global commands:
         - add-pr
-        - lint-php (and start using it please)
+        - lint-php - and start using it please
+            - maybe I need a "preflight check" command or a "check and push" command
+            - Or... can I add pre-commit hooks, but only for my own local usage?
         - find modules with un-pushed changes (could be staged, unstaged, etc - normally stuff I do via find-and-replace)
-        DO I NEED THESE? Or is DDEV quick and simple enough as-is?
-        - Attach (with all of the relevant defaults/settings)
-        - Detach (with all of the relevant defaults/settings)
-
-    - Add protection to eddev config command
-        - Only let it be used in subdirectories of the global projects dir or in a valid pre-existing project.
-        - Creating new DDEV projects is EXPLICITLY only allowed in subdirectories of the main projects dir - and not nested in existing projects.
-        - That probably will mean we need a specific attach/detach here, as a way to bypass that rule - but maybe we can have it as a prompted warning instead.
 */
 
 /**
