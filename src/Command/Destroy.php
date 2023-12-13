@@ -48,6 +48,7 @@ class Destroy extends BaseCommand
             return self::FAILURE;
         }
 
+        $this->output->success("Project {$projectName} successfully destroyed");
         return self::SUCCESS;
     }
 
