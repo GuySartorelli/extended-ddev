@@ -4,6 +4,8 @@
 use GuySartorelli\DdevWrapper\Application;
 use GuySartorelli\ExtendedDdev\Command\Create;
 use GuySartorelli\ExtendedDdev\Command\Destroy;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Filesystem\Path;
 
@@ -28,10 +30,20 @@ $envConfig = new Dotenv();
 $envConfig->usePutenv(true);
 $envConfig->bootEnv($envFilePath);
 
-// Start app
+// Register global commands
 $application = new Application('eddev');
 $application->addCommands([
     new Create(),
     new Destroy(),
 ]);
+// Register shortcut commands
+$application->addShortcutCommand('sake', 'Run Silverstripe CMS sake CLI inside the web container', 'exec', ['sake'])
+    ->addArgument('arguments', InputArgument::IS_ARRAY | InputArgument::OPTIONAL, 'Arguments to be passed through to the DDEV command, if any');
+$application->addShortcutCommand('flush', 'Flush the Silverstripe CMS cache', 'exec', ['sake', 'dev', 'flush=1']);
+$application->addShortcutCommand('dev/build', 'Build the Silverstripe CMS database', 'exec', ['sake', 'dev/build', 'flush=1']);
+$application->addShortcutCommand('behat', 'Run behat tests', 'exec', ['behat'])
+    ->addArgument('module', InputArgument::REQUIRED, 'The module to run tests against')
+    ->addOption('tags', mode: InputOption::VALUE_REQUIRED, default: 'gsat');
+$application->addShortcutCommand('mailpit', 'Launch mailpit in the default browser', 'launch', ['-m']);
+// Start app
 $application->run();

@@ -26,7 +26,6 @@ use Symfony\Component\Filesystem\Path;
 /*
     @TODO
 
-    - Add behat helper command (probably just as a global ddev command though)
     - Add phpunit helper command
     - Sort out verbosity vs interactivity (probably steal from the other local dev project)
         - MUST allow verbosity for custom commands
