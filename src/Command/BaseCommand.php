@@ -44,4 +44,12 @@ abstract class BaseCommand extends Command
         }
         return $value;
     }
+
+    /**
+     * An easier-to-read success message format than the default of SymfonyStyle.
+     */
+    protected function success(string|array $message): void
+    {
+        $this->output->block($message, 'OK', 'fg=black;bg=bright-green', ' ', true);
+    }
 }

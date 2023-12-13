@@ -139,7 +139,7 @@ class Create extends BaseCommand
         }
 
         $details = DDevHelper::runJson('describe');
-        $this->output->success("Created environment {$details->name}. Go to {$details->primary_url}");
+        $this->success("Created environment {$details->name}. Go to {$details->primary_url}");
 
         return $success ? self::SUCCESS : self::FAILURE;
     }

@@ -89,7 +89,7 @@ class PhpUnit extends BaseCommand
             return self::FAILURE;
         }
 
-        $this->output->success('PHPUnit ran successfully.');
+        $this->success('PHPUnit ran successfully.');
         return self::SUCCESS;
     }
 
