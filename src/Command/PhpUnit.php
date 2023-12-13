@@ -3,6 +3,7 @@
 namespace GuySartorelli\ExtendedDdev\Command;
 
 use GuySartorelli\DdevWrapper\DDevHelper;
+use RecursiveDirectoryIterator;
 use RuntimeException;
 use stdClass;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -199,7 +200,27 @@ class PhpUnit extends BaseCommand
             'A specific module for which to run tests. Can be used to narrow the search for test classes, or used without "test-class" to run all tests for that module.',
             null,
             function () {
-                return explode("\n", DDevHelper::run('composer', ['show', '--installed', '--name-only']));
+                //
+                $projectDetails = DDevHelper::runJson('describe');
+                $vendorPath = Path::join($projectDetails->approot, 'vendor');
+                $orgIterator = new RecursiveDirectoryIterator($vendorPath, RecursiveDirectoryIterator::SKIP_DOTS | RecursiveDirectoryIterator::CURRENT_AS_FILEINFO);
+                $repos = [];
+                // Iterate through all vendor dirs
+                foreach ($orgIterator as $org) {
+                    if (!$org->isDir()) {
+                        continue;
+                    }
+                    $repoIterator = new RecursiveDirectoryIterator($org->getPathname(), RecursiveDirectoryIterator::SKIP_DOTS | RecursiveDirectoryIterator::CURRENT_AS_FILEINFO);
+                    // Iterate through all repos in the org
+                    foreach ($repoIterator as $repo) {
+                        if (!$repo->isDir()) {
+                            continue;
+                        }
+                        // Give the full module name as a result
+                        $repos[] = "{$org->getFilename()}/{$repo->getFilename()}";
+                    }
+                }
+                return $repos;
             }
         );
         $this->addOption(
