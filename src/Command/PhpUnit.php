@@ -196,7 +196,11 @@ class PhpUnit extends BaseCommand
             'module',
             'm',
             InputOption::VALUE_REQUIRED,
-            'A specific module for which to run tests. Can be used to narrow the search for test classes, or used without "test-class" to run all tests for that module.'
+            'A specific module for which to run tests. Can be used to narrow the search for test classes, or used without "test-class" to run all tests for that module.',
+            null,
+            function () {
+                return explode("\n", DDevHelper::run('composer', ['show', '--installed', '--name-only']));
+            }
         );
         $this->addOption(
             'test-class',
