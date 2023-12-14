@@ -26,12 +26,10 @@ use Symfony\Component\Filesystem\Path;
 /*
     @TODO
 
-    - Sort out verbosity vs interactivity (probably steal from the other local dev project)
-        - MUST allow verbosity for custom commands
-        - MUST NOT enforce verbosity for pass-through commands
     - See what improvements can be taken from the other local dev projects
-
-    - Add more global commands:
+    - Add more global commands(?):
+        - A quick "clone a repo into a predetermined dir, add the appropriate fork, and check out the PR branch" command
+            - Really good for when it's not worth pulling up a whole env just to update like docs or something.
         - add-pr
         - lint-php - and start using it please
             - maybe I need a "preflight check" command or a "check and push" command
@@ -292,9 +290,10 @@ class Create extends BaseCommand
 
     private function checkoutPRs(): bool
     {
+        $this->outputStep('Checking out PRs so we can pull in their dependencies');
         $success = true;
         foreach ($this->prs as $composerName => $details) {
-            $this->outputStep('Setting up PR for ' . $composerName);
+            $this->outputSubStep('Setting up PR for ' . $composerName);
 
             // Check PR type and prepare remotes name
             $prIsCC = str_starts_with($details['remote'], 'git@github.com:creative-commoners/');
@@ -307,13 +306,13 @@ class Create extends BaseCommand
                 $remoteName = 'pr';
             }
 
-            $this->outputStep('Setting remote ' . $details['remote'] . ' as "' . $remoteName . '" and checking out branch ' . $details['prBranch']);
+            $this->outputSubStep('Setting remote ' . $details['remote'] . ' as "' . $remoteName . '" and checking out branch ' . $details['prBranch']);
 
             // Try to add dependency if it's not there already
             $prPath = Path::join($this->projectRoot, 'vendor', $composerName);
             if (!$this->filesystem->exists($prPath)) {
                 // Try composer require-ing it - and if that fails, toss out a warning about it and move on.
-                $this->outputStep($composerName . ' is not yet added as a dependency - requiring it.');
+                $this->outputSubStep($composerName . ' is not yet added as a dependency - requiring it.');
                 $checkoutSuccess = DDevHelper::runInteractiveOnVerbose('composer', ['require', $composerName, '--prefer-source'], $this->output, [$this, 'handleDdevOutput']);
                 if (!$checkoutSuccess) {
                     $this->failCheckout($composerName, $success);
@@ -357,7 +356,7 @@ class Create extends BaseCommand
     private function includeOptionalModule(string $moduleName, bool $shouldInclude = true, bool $isDev = false)
     {
         if ($shouldInclude) {
-            $this->outputStep("Adding optional module $moduleName");
+            $this->outputSubStep("Adding optional module $moduleName");
             $composerArgs = [
                 'require',
                 $moduleName,

@@ -22,7 +22,6 @@ abstract class BaseCommand extends Command
 
     private ?ProgressBar $progressBar = null;
 
-    protected const STYLE_STEP = '<fg=blue>';
     protected const STYLE_END = '</>';
 
     /**
@@ -51,10 +50,19 @@ abstract class BaseCommand extends Command
     /**
      * Nice standardised output style for outputting step information
      */
+    protected function outputSubStep(string $output): void
+    {
+        $this->clearProgressBar();
+        $this->output->writeln('<fg=gray>' . $output . self::STYLE_END);
+    }
+
+    /**
+     * Nice standardised output style for outputting step information
+     */
     protected function outputStep(string $output): void
     {
         $this->clearProgressBar();
-        $this->output->writeln(self::STYLE_STEP . $output . self::STYLE_END);
+        $this->output->writeln('<fg=blue>' . $output . self::STYLE_END);
     }
 
     /**
