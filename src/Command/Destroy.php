@@ -55,32 +55,27 @@ class Destroy extends BaseCommand
     private function validateOptions()
     {
         $projectName = $this->input->getArgument('project-name');
-        $allProjects = DDevHelper::runJson('list');
+        if (!$projectName) {
+            return;
+        }
 
+        $allProjects = DDevHelper::runJson('list');
         if (empty($allProjects)) {
             throw new RuntimeException('There are no current DDEV projects to destroy');
         }
 
-        $allProjectNames = array_column($allProjects, 'name');
-        if (!in_array($projectName, $allProjectNames)) {
-            $projectName = $this->output->ask(
-                'Which project do you want to destroy?',
-                validator: function (string $answer) use ($allProjectNames): string {
-                    if (!in_array($answer, $allProjectNames)) {
-                        throw new RuntimeException('You must provide a valid project name.');
-                    }
-                    return $answer;
-                }
-            );
-            $this->input->setArgument('project-name', $projectName);
-        }
-
+        $found = false;
         foreach ($allProjects as $projectDetails) {
             if (!$projectDetails->name === $projectName) {
                 continue;
             }
+            $found = true;
             $this->projectRoot = $projectDetails->approot;
             break;
+        }
+
+        if (!$found) {
+            throw new RuntimeException("Project $projectName doesn't exist");
         }
     }
 
