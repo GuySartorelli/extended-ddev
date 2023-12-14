@@ -5,12 +5,6 @@
   "bin": [
     "bin/eddev"
   ],
-  "repositories": {
-    "guysartorelli/ddev-wrapper": {
-      "type": "vcs",
-      "url": "git@github.com:GuySartorelli/ddev-wrapper.git"
-    }
-  },
   "require": {
     "php": "^8.1",
     "guysartorelli/ddev-wrapper": "dev-main",
