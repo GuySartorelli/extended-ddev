@@ -50,6 +50,9 @@ abstract class BaseCommand extends Command
      */
     protected function success(string|array $message): void
     {
-        $this->output->block($message, 'OK', 'fg=black;bg=bright-green', ' ', true);
+        // Retain background style inside any formatted sections
+        $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1bg=bright-green;$2', $message);
+        // Render the message
+        $this->output->block($message, 'OK', 'fg=black;bg=bright-green', padding: true, escape: false);
     }
 }
