@@ -28,22 +28,22 @@ class Destroy extends BaseCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $projectName = $this->input->getArgument('project-name');
-        $this->output->writeln(self::STYLE_STEP . "Destroying project $projectName" . self::STYLE_END);
+        $this->outputStep("Destroying project $projectName");
 
-        $this->output->writeln(self::STYLE_STEP . "Shutting down DDEV project" . self::STYLE_END);
+        $this->outputStep("Shutting down DDEV project");
         chdir($this->projectRoot);
-        $success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y'], $output);
+        $success = DDevHelper::runInteractiveOnVerbose('delete', ['-O', '-y'], $this->output, [$this, 'handleDdevOutput']);
         if (!$success) {
-            $this->output->error('Could not shut down DDEV project.');
+            $this->error('Could not shut down DDEV project.');
             return self::FAILURE;
         }
 
-        $this->output->writeln(self::STYLE_STEP . "Deleting project directory" . self::STYLE_END);
+        $this->outputStep("Deleting project directory");
         $filesystem = new Filesystem();
         try {
             $filesystem->remove($this->projectRoot);
         } catch (IOExceptionInterface $e) {
-            $this->output->error('Could not delete project directory: ' . $e->getMessage());
+            $this->error('Could not delete project directory: ' . $e->getMessage());
             $this->output->writeln($e->getTraceAsString(), OutputInterface::VERBOSITY_DEBUG);
             return self::FAILURE;
         }

@@ -49,25 +49,25 @@ class GitSetRemotes extends BaseCommand
 
         if ($input->getOption('security')) {
             // Add security remote
-            $this->output->writeln(self::STYLE_STEP . 'Adding the security remote' . self::STYLE_END);
+            $this->outputStep('Adding the security remote');
             $securityRemote = preg_replace($prefixAndOrgRegex, $securityAccount, $originUrl);
             $gitRepo->run('remote', ['add', 'security', $securityRemote]);
         } else {
             // Add cc remote
-            $this->output->writeln(self::STYLE_STEP . 'Adding the creative-commoners remote' . self::STYLE_END);
+            $this->outputStep('Adding the creative-commoners remote');
             $ccRemote = preg_replace($prefixAndOrgRegex, $ccAccount, $originUrl);
             $gitRepo->run('remote', ['add', 'cc', $ccRemote]);
         }
 
         // Rename origin
         if ($input->getOption('rename-origin')) {
-            $this->output->writeln(self::STYLE_STEP . 'Renaming the origin remote' . self::STYLE_END);
+            $this->outputStep('Renaming the origin remote');
             $gitRepo->run('remote', ['rename', 'origin', 'orig']);
         }
 
         // Fetch
         if ($input->getOption('fetch')) {
-            $this->output->writeln(self::STYLE_STEP . 'Fetching all remotes' . self::STYLE_END);
+            $this->outputStep('Fetching all remotes');
             $gitRepo->run('fetch', ['--all']);
         }
 

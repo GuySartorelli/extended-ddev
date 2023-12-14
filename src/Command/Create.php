@@ -29,7 +29,6 @@ use Symfony\Component\Filesystem\Path;
     - Sort out verbosity vs interactivity (probably steal from the other local dev project)
         - MUST allow verbosity for custom commands
         - MUST NOT enforce verbosity for pass-through commands
-    - See if any ddev specific stuff should be added
     - See what improvements can be taken from the other local dev projects
 
     - Add more global commands:
@@ -92,7 +91,7 @@ class Create extends BaseCommand
         $this->validateOptions();
 
         if (in_array('--no-install', $this->input->getOption('composer-option')) && !empty($this->input->getOption('pr'))) {
-            $this->output->warning('Composer --no-install has been set. Cannot checkout PRs.');
+            $this->warning('Composer --no-install has been set. Cannot checkout PRs.');
         } elseif (!empty($this->input->getOption('pr'))) {
             $this->prs = GitHubService::getPullRequestDetails($this->input->getOption('pr'), $this->getEnv('EDDEV_GITHUB_TOKEN'));
         }
@@ -131,22 +130,23 @@ class Create extends BaseCommand
             return self::FAILURE;
         }
 
-        // @TODO only interactive on verbose
-        $success = DDevHelper::runInteractive('exec', ['sake', 'dev/build']);
+        $this->outputStep('Building database');
+        $success = DDevHelper::runInteractiveOnVerbose('exec', ['sake', 'dev/build'], $this->output, [$this, 'handleDdevOutput']);
         if (!$success) {
             $appName = $this->getApplication()->getName();
-            $this->output->warning("Couldn't build database - run `$appName exec sake dev/build`");
+            $this->warning("Couldn't build database - run <options=bold>$appName exec sake dev/build</>");
         }
+        $this->endProgressBar();
 
         $details = DDevHelper::runJson('describe');
-        $this->success("Created environment <options=bold>$details->name}</>. Go to <options=bold>{$details->primary_url}</>");
+        $this->success("Created environment <options=bold>{$details->name}</>. Go to <options=bold>{$details->primary_url}</>");
 
         return $success ? self::SUCCESS : self::FAILURE;
     }
 
     private function prepareProjectRoot(): bool
     {
-        $this->output->writeln(self::STYLE_STEP . 'Preparing project directory' . self::STYLE_END);
+        $this->outputStep('Preparing project directory');
 
         try {
             // Make the project directory
@@ -155,7 +155,7 @@ class Create extends BaseCommand
             }
         } catch (IOExceptionInterface $e) {
             // @TODO replace this with more standardised error/failure handling.
-            $this->output->error("Couldn't create environment directory: {$e->getMessage()}");
+            $this->error("Couldn't create environment directory: {$e->getMessage()}");
             $this->output->writeln($e->getTraceAsString(), OutputInterface::VERBOSITY_DEBUG);
 
             return false;
@@ -169,6 +169,7 @@ class Create extends BaseCommand
      */
     private function copyProjectFiles(): bool
     {
+        $this->outputStep('Copying eddev files to project');
         try {
             // Copy files through (config, .env, etc)
             $this->filesystem->mirror(
@@ -178,7 +179,7 @@ class Create extends BaseCommand
             );
         } catch (IOExceptionInterface $e) {
             // @TODO replace this with more standardised error/failure handling.
-            $this->output->error("Couldn't copy project files: {$e->getMessage()}");
+            $this->error("Couldn't copy project files: {$e->getMessage()}");
             $this->output->writeln($e->getTraceAsString(), OutputInterface::VERBOSITY_DEBUG);
 
             return false;
@@ -189,6 +190,8 @@ class Create extends BaseCommand
 
     private function setupDdevProject(): bool
     {
+        $this->outputStep('Spinning up DDEV project');
+
         $dbType = $this->input->getOption('db');
         $dbVersion = $this->input->getOption('db-version');
         if ($dbVersion) {
@@ -197,43 +200,49 @@ class Create extends BaseCommand
             $db = "--db-image={$dbType}";
         }
 
-        // @TODO only run interactive when running verbosely - otherwise use a progressbar.
-        $success = DDevHelper::runInteractive('config', [
-            $db,
-            '--webserver-type=apache-fpm',
-            '--project-type=php',
-            '--php-version=' . $this->input->getOption('php-version'),
-            '--project-name=' . $this->input->getArgument('env-name'),
-            '--timezone=Pacific/Auckland',
-            '--docroot=public',
-            '--create-docroot',
-        ]);
+        $success = DDevHelper::runInteractiveOnVerbose(
+            'config', [
+                $db,
+                '--webserver-type=apache-fpm',
+                '--project-type=php',
+                '--php-version=' . $this->input->getOption('php-version'),
+                '--project-name=' . $this->input->getArgument('env-name'),
+                '--timezone=Pacific/Auckland',
+                '--docroot=public',
+                '--create-docroot',
+            ],
+            $this->output,
+            [$this, 'handleDdevOutput']
+        );
 
-        // @TODO only run interactive when running verbosely - otherwise use a progressbar.
-        $hasBehat = DDevHelper::runInteractive('get', ['ddev/ddev-selenium-standalone-chrome']);
+        $hasBehat = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-selenium-standalone-chrome'], $this->output, [$this, 'handleDdevOutput']);
         if (!$hasBehat) {
-            $this->output->warning('Could not add DDEV addon "ddev/ddev-selenium-standalone-chrome" - add that manually.');
+            $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-selenium-standalone-chrome</> - add that manually.');
         }
 
-        // @TODO only run interactive when running verbosely - otherwise use a progressbar.
-        $hasDbAdmin = DDevHelper::runInteractive('get', ['ddev/ddev-adminer']);
+        $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-adminer'], $this->output, [$this, 'handleDdevOutput']);
         if (!$hasDbAdmin) {
-            $this->output->warning('Could not add DDEV addon "ddev/ddev-adminer" - add that manually.');
+            $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
         }
 
+        $this->endProgressBar();
         return $success;
     }
 
     private function setupComposerProject(): bool
     {
+        $this->outputStep('Creating composer project');
+
         // Run composer command
-        // @TODO Only run interactive in verbose mode
         $composerArgs = $this->prepareComposerCommand('create');
-        $success = DDevHelper::runInteractive('composer', $composerArgs);
+        $success = DDevHelper::runInteractiveOnVerbose('composer', $composerArgs, $this->output, [$this, 'handleDdevOutput']);
         if (!$success) {
-            $this->output->error('Couldn\'t create composer project.');
+            $this->error('Couldn\'t create composer project.');
             return false;
         }
+
+        $this->endProgressBar();
+        $this->outputStep('Installing additional composer dependencies');
 
         // Install optional modules as appropriate
         $this->includeOptionalModule('silverstripe/dynamodb:' . $this->input->getOption('constraint'), (bool) $this->input->getOption('include-dynamodb'));
@@ -247,6 +256,7 @@ class Create extends BaseCommand
             $this->includeOptionalModule($module);
         }
 
+        $this->endProgressBar();
         return $success;
     }
 
@@ -261,20 +271,20 @@ class Create extends BaseCommand
         }
 
         // Add prs to composer.json
-        $this->output->writeln(self::STYLE_STEP . 'Adding PRs to composer.json' . self::STYLE_END);
+        $this->outputStep('Adding PRs to composer.json');
         $composerService = new ComposerJsonService($this->projectRoot);
         $composerService->addForks($this->prs);
         $composerService->addForkedDeps($this->prs);
 
         // Run composer install
-        $this->output->writeln(self::STYLE_STEP . 'Running composer install now that dependencies have been defined' . self::STYLE_END);
+        $this->outputStep('Running composer install now that dependencies have been defined');
         $composerArgs = $this->prepareComposerCommand('install');
-        // @TODO Only run interactively in verbose mode
-        $success = DDevHelper::runInteractive('composer', $composerArgs);
+        $success = DDevHelper::runInteractiveOnVerbose('composer', $composerArgs, $this->output, [$this, 'handleDdevOutput']);
         if (!$success) {
-            $this->output->error('Couldn\'t run composer install.');
+            $this->error('Couldn\'t run composer install.');
             return false;
         }
+        $this->endProgressBar();
         return true;
     }
 
@@ -282,7 +292,7 @@ class Create extends BaseCommand
     {
         $success = true;
         foreach ($this->prs as $composerName => $details) {
-            $this->output->writeln(self::STYLE_STEP . 'Setting up PR for ' . $composerName . self::STYLE_END);
+            $this->outputStep('Setting up PR for ' . $composerName);
 
             // Check PR type and prepare remotes name
             $prIsCC = str_starts_with($details['remote'], 'git@github.com:creative-commoners/');
@@ -295,15 +305,14 @@ class Create extends BaseCommand
                 $remoteName = 'pr';
             }
 
-            $this->output->writeln(self::STYLE_STEP . 'Setting remote ' . $details['remote'] . ' as "' . $remoteName . '" and checking out branch ' . $details['prBranch'] . self::STYLE_END);
+            $this->outputStep('Setting remote ' . $details['remote'] . ' as "' . $remoteName . '" and checking out branch ' . $details['prBranch']);
 
             // Try to add dependency if it's not there already
             $prPath = Path::join($this->projectRoot, 'vendor', $composerName);
             if (!$this->filesystem->exists($prPath)) {
                 // Try composer require-ing it - and if that fails, toss out a warning about it and move on.
-                $this->output->writeln(self::STYLE_STEP . $composerName . ' is not yet added as a dependency - requiring it.' . self::STYLE_END);
-                // @TODO Only run interactively in verbose mode
-                $checkoutSuccess = DDevHelper::runInteractive('composer', ['require', $composerName, '--prefer-source']);
+                $this->outputStep($composerName . ' is not yet added as a dependency - requiring it.');
+                $checkoutSuccess = DDevHelper::runInteractiveOnVerbose('composer', ['require', $composerName, '--prefer-source'], $this->output, [$this, 'handleDdevOutput']);
                 if (!$checkoutSuccess) {
                     $this->failCheckout($composerName, $success);
                     continue;
@@ -320,12 +329,13 @@ class Create extends BaseCommand
                 continue;
             }
         }
+        $this->endProgressBar();
         return $success;
     }
 
     private function failCheckout(string $composerName, mixed &$success): void
     {
-        $this->output->warning('Could not check out PR for ' . $composerName . ' - please check out that PR manually.');
+        $this->warning('Could not check out PR for <options=bold>' . $composerName . '</> - please check out that PR manually.');
         $success = false;
     }
 
@@ -345,7 +355,7 @@ class Create extends BaseCommand
     private function includeOptionalModule(string $moduleName, bool $shouldInclude = true, bool $isDev = false)
     {
         if ($shouldInclude) {
-            $this->output->writeln(self::STYLE_STEP . "Adding optional module $moduleName" . self::STYLE_END);
+            $this->outputStep("Adding optional module $moduleName");
             $composerArgs = [
                 'require',
                 $moduleName,
@@ -357,10 +367,9 @@ class Create extends BaseCommand
             }
 
             // Run composer command
-            // @TODO Only interactive in verbose mode
-            $success = DDevHelper::runInteractive('composer', $composerArgs);
+            $success = DDevHelper::runInteractiveOnVerbose('composer', $composerArgs, $this->output, [$this, 'handleDdevOutput']);
             if (!$success) {
-                $this->output->warning("Couldn't require '$moduleName' - add that dependency manually.");
+                $this->warning("Couldn't require <options=bold>$moduleName</> - add that dependency manually.");
             }
             return $success;
         }
@@ -480,6 +489,7 @@ class Create extends BaseCommand
         }
         // Name must not represent a pre-existing project
         if (DDevHelper::getProjectDetails($name) !== null) {
+            $this->warning('A project with that name already exists');
             return false;
         }
         // Name must not have invalid characters

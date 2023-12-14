@@ -56,7 +56,7 @@ class PhpUnit extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->output->writeln(self::STYLE_STEP . 'Finding directory to run tests in, or exact test file.' . self::STYLE_END);
+        $this->outputStep('Finding directory to run tests in, or exact test file.');
 
         // Build args
         $args = [$this->phpunitArg];
@@ -73,7 +73,7 @@ class PhpUnit extends BaseCommand
 
         // We have to remove old cache because for some reason cache from non-test usage doesn't get correctly flushed away
         // which results in TestOnly classes not having their config set correctly.
-        $this->output->writeln(self::STYLE_STEP . 'Removing old cache.' . self::STYLE_END);
+        $this->outputStep('Removing old cache.');
         $cachePath = Path::join($this->projectDetails->approot, 'silverstripe-cache');
         $fileSystem = new Filesystem();
         if ($fileSystem->exists($cachePath)) {
@@ -82,7 +82,7 @@ class PhpUnit extends BaseCommand
         }
 
         // Run tests
-        $this->output->writeln(self::STYLE_STEP . 'Running PHPUnit.' . self::STYLE_END);
+        $this->outputStep('Running PHPUnit.');
         $success = DDevHelper::runInteractive('exec', ['phpunit', ...$args]);
 
         if (!$success) {
