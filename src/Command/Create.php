@@ -225,6 +225,8 @@ class Create extends BaseCommand
             $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
         }
 
+        DDevHelper::runInteractiveOnVerbose('start', [], $this->output, [$this, 'handleDdevOutput']);
+
         $this->endProgressBar();
         return $success;
     }
