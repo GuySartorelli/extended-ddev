@@ -20,8 +20,6 @@ abstract class BaseCommand extends Command
 
     protected SymfonyStyle $output;
 
-    protected const META_DIR_NAME = '.eddev';
-
     private ?ProgressBar $progressBar = null;
 
     protected const STYLE_STEP = '<fg=blue>';
