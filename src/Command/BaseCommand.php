@@ -126,7 +126,7 @@ abstract class BaseCommand extends Command
             // Make sure messages can't span multiple lines - truncate if necessary
             $terminal = new Terminal();
             $threshold = $terminal->getWidth() - $barWidth - $timeWidth - 5;
-            $message = Helper::removeDecoration($this->output->getFormatter(), str_replace("\n", ' ', $message));
+            $message = trim(Helper::removeDecoration($this->output->getFormatter(), str_replace("\n", ' ', $message)));
             if (strlen($message) > $threshold) {
                 $message = substr($message, 0, $threshold - 3) . '...';
             }
