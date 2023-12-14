@@ -66,7 +66,7 @@ class Destroy extends BaseCommand
 
         $found = false;
         foreach ($allProjects as $projectDetails) {
-            if (!$projectDetails->name === $projectName) {
+            if ($projectDetails->name !== $projectName) {
                 continue;
             }
             $found = true;
