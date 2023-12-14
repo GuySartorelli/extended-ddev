@@ -84,7 +84,7 @@ abstract class BaseCommand extends Command
     {
         $this->clearProgressBar();
         // Retain colour style inside any formatted sections
-        $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1bg=yellow$2', $message);
+        $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1bg=yellow;$2', $message);
         // Render the message
         $this->output->block($message, 'WARNING', 'fg=black;bg=yellow', padding: true, escape: false);
     }
@@ -97,7 +97,7 @@ abstract class BaseCommand extends Command
     {
         $this->endProgressBar();
         // Retain colour style inside any formatted sections
-        $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1fg=white;bg=red$2', $message);
+        $message = preg_replace('#(<)([^/]+>.+?</>)#', '$1fg=white;bg=red;$2', $message);
         // Render the message
         $this->output->block($message, 'ERROR', 'fg=white;bg=red', padding: true, escape: false);
     }
