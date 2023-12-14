@@ -4,6 +4,7 @@
 use GuySartorelli\DdevWrapper\Application;
 use GuySartorelli\ExtendedDdev\Command\Create;
 use GuySartorelli\ExtendedDdev\Command\Destroy;
+use GuySartorelli\ExtendedDdev\Command\GitSetRemotes;
 use GuySartorelli\ExtendedDdev\Command\PhpUnit;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -37,6 +38,7 @@ $application->addCommands([
     new Create(),
     new Destroy(),
     new PhpUnit(),
+    new GitSetRemotes(),
 ]);
 // Register shortcut commands
 $application->addShortcutCommand('sake', 'Run Silverstripe CMS sake CLI inside the web container', 'exec', ['sake'])
