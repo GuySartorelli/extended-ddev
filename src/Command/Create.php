@@ -165,13 +165,17 @@ class Create extends BaseCommand
     /**
      * Copy files to the project. Has to be done AFTER composer create
      */
-    private function copyProjectFiles(): bool
+    private function copyProjectFiles(bool $onlyDdevDir = false): bool
     {
-        $this->outputStep('Copying eddev files to project');
+        if ($onlyDdevDir) {
+            $this->outputSubStep('Copying extra .ddev files to project');
+        } else {
+            $this->outputStep('Copying .eddev files to project');
+        }
         try {
             // Copy files through (config, .env, etc)
             $this->filesystem->mirror(
-                Path::join(__DIR__, '../..', 'copy-to-project'),
+                Path::join(__DIR__, '../..', 'copy-to-project', $onlyDdevDir ? '.ddev' : ''),
                 $this->projectRoot,
                 options: ['override' => true]
             );
@@ -212,6 +216,10 @@ class Create extends BaseCommand
             $this->output,
             [$this, 'handleDdevOutput']
         );
+        if (!$success) {
+            $this->error('Failed to set up DDEV project.');
+            return false;
+        }
 
         $hasBehat = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-selenium-standalone-chrome'], $this->output, [$this, 'handleDdevOutput']);
         if (!$hasBehat) {
@@ -223,10 +231,15 @@ class Create extends BaseCommand
             $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
         }
 
+        $success = $this->copyProjectFiles();
+        if (!$success) {
+            return false;
+        }
+
         DDevHelper::runInteractiveOnVerbose('start', [], $this->output, [$this, 'handleDdevOutput']);
 
         $this->endProgressBar();
-        return $success;
+        return true;
     }
 
     private function setupComposerProject(): bool
