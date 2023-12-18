@@ -7,6 +7,7 @@ use RecursiveDirectoryIterator;
 use RuntimeException;
 use stdClass;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -59,7 +60,7 @@ class PhpUnit extends BaseCommand
         $this->outputStep('Finding directory to run tests in, or exact test file.');
 
         // Build args
-        $args = [$this->phpunitArg];
+        $args = [$this->phpunitArg, ...$this->input->getArgument('option')];
         if ($this->input->getOption('configuration')) {
             $args[] = '--configuration=' . $this->input->getOption('configuration');
         }
@@ -193,6 +194,12 @@ class PhpUnit extends BaseCommand
      */
     protected function configure(): void
     {
+        $this->addArgument(
+            'option',
+            InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
+            'Any additional options to pass through to PHPUnit',
+            []
+        );
         $this->addOption(
             'module',
             'm',
