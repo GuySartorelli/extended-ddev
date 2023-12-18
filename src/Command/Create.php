@@ -176,7 +176,7 @@ class Create extends BaseCommand
             // Copy files through (config, .env, etc)
             $this->filesystem->mirror(
                 Path::join(__DIR__, '../..', 'copy-to-project', $onlyDdevDir ? '.ddev' : ''),
-                $this->projectRoot,
+                Path::join($this->projectRoot, $onlyDdevDir ? '.ddev' : ''),
                 options: ['override' => true]
             );
         } catch (IOExceptionInterface $e) {
@@ -231,7 +231,7 @@ class Create extends BaseCommand
             $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
         }
 
-        $success = $this->copyProjectFiles();
+        $success = $this->copyProjectFiles(true);
         if (!$success) {
             return false;
         }
