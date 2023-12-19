@@ -284,7 +284,7 @@ class Create extends BaseCommand
         }
 
         // Add prs to composer.json
-        $this->outputStep('Adding PRs to composer.json');
+        $this->outputStep('Adding PRs to composer.json so we can pull in their dependencies');
         $composerService = new ComposerJsonService($this->projectRoot);
         $composerService->addForks($this->prs);
         $composerService->addForkedDeps($this->prs);
@@ -303,7 +303,7 @@ class Create extends BaseCommand
 
     private function checkoutPRs(): bool
     {
-        $this->outputStep('Checking out PRs so we can pull in their dependencies');
+        $this->outputStep('Checking out PRs');
         $success = true;
         foreach ($this->prs as $composerName => $details) {
             $this->outputSubStep('Setting up PR for ' . $composerName);
