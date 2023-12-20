@@ -4,7 +4,9 @@ namespace GuySartorelli\ExtendedDdev\Utility;
 
 use Github\AuthMethod;
 use Github\Client as GithubClient;
+use Github\Exception\RuntimeException as GitHubRuntimeException;
 use InvalidArgumentException;
+use RuntimeException;
 
 class GitHubService
 {
@@ -22,31 +24,32 @@ class GitHubService
         }
         $prs = [];
         foreach ($rawPRs as $rawPR) {
-            $parsed = static::parsePr($rawPR);
-            $prDetails = $client->pullRequest()->show($parsed['org'], $parsed['repo'], $parsed['pr']);
-            $composerName = static::getComposerNameForPR($client, $parsed);
-
-            if (array_key_exists($composerName, $prs)) {
-                throw new InvalidArgumentException("cannot add multiple PRs for the same pacakge: $composerName");
+            $parsed = static::parseIdentifier($rawPR);
+            if (empty($parsed['pr'])) {
+                throw new InvalidArgumentException("'$rawPR' is not a valid GitHub PR reference.");
             }
 
-            $prs[$composerName] = array_merge($parsed, [
-                'from-org' => $prDetails['head']['user']['login'],
-                'remote' => $prDetails['head']['repo']['ssh_url'],
-                'prBranch' => $prDetails['head']['ref'],
-                'baseBranch' => $prDetails['base']['ref'],
-            ]);
+            $composerName = static::getComposerNameForIdentifier($client, $parsed);
+            if (array_key_exists($composerName, $prs)) {
+                throw new InvalidArgumentException("cannot add multiple PRs for the same package: $composerName");
+            }
+
+            $prs[$composerName] = static::getPRDetails($client, $parsed);
         }
         return $prs;
     }
 
     /**
-     * Parse a URL or github-shorthand PR reference into an array containing the org, repo, and pr components.
+     * Parse a URL or github-shorthand repository reference (with optional PR) into an array containing the org, repo, and pr components.
      */
-    private static function parsePr(string $prRaw): array
+    private static function parseIdentifier(string $identifier): array
     {
-        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9_-]*)(?>/pull/|#)(?<pr>[0-9]*)@', $prRaw, $matches)) {
-            throw new InvalidArgumentException("'$prRaw' is not a valid github PR reference.");
+        $identifier = preg_replace('#^(https?://(www\.)?github\.com/|git@github\.com:)#', '', $identifier);
+        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9_-]*)(?>(?>/pull/|#)(?<pr>[0-9]+))?@', $identifier, $matches)) {
+            throw new InvalidArgumentException("'$identifier' is not a valid GitHub repository reference.");
+        }
+        if (empty($matches['org']) || empty($matches['repo'])) {
+            throw new InvalidArgumentException("'$identifier' is not a valid GitHub repository reference.");
         }
         return $matches;
     }
@@ -54,9 +57,38 @@ class GitHubService
     /**
      * Get the composer name of a project from the composer.json of a repo.
      */
-    private static function getComposerNameForPR(GithubClient $client, array $pr): string
+    private static function getComposerNameForIdentifier(GithubClient $client, array $parsedIdentifier): string
     {
-        $composerJson = $client->repo()->contents()->download($pr['org'], $pr['repo'], 'composer.json');
+        try {
+            $composerJson = $client->repo()->contents()->download($parsedIdentifier['org'], $parsedIdentifier['repo'], 'composer.json');
+        } catch (GitHubRuntimeException $e) {
+            throw new RuntimeException("Couldn't find composer name for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
+        }
         return json_decode($composerJson, true)['name'];
+    }
+
+    private static function getPRDetails(GithubClient $client, array $parsedIdentifier): array
+    {
+        $prDetails = $client->pullRequest()->show($parsedIdentifier['org'], $parsedIdentifier['repo'], $parsedIdentifier['pr']);
+        $remote = $prDetails['head']['repo']['ssh_url'];
+
+        // Check PR type to determine remote name
+        $prIsCC = str_starts_with($remote, 'git@github.com:creative-commoners/');
+        $prIsSecurity = str_starts_with($remote, 'git@github.com:silverstripe-security/');
+        if ($prIsCC) {
+            $remoteName = 'cc';
+        } elseif ($prIsSecurity) {
+            $remoteName = 'security';
+        } else {
+            $remoteName = 'pr';
+        }
+
+        return array_merge($parsedIdentifier, [
+            'from-org' => $prDetails['head']['user']['login'],
+            'remote' => $remote,
+            'prBranch' => $prDetails['head']['ref'],
+            'baseBranch' => $prDetails['base']['ref'],
+            'remoteName' => $remoteName,
+        ]);
     }
 }

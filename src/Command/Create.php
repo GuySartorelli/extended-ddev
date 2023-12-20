@@ -307,19 +307,7 @@ class Create extends BaseCommand
         $success = true;
         foreach ($this->prs as $composerName => $details) {
             $this->outputSubStep('Setting up PR for ' . $composerName);
-
-            // Check PR type and prepare remotes name
-            $prIsCC = str_starts_with($details['remote'], 'git@github.com:creative-commoners/');
-            $prIsSecurity = str_starts_with($details['remote'], 'git@github.com:silverstripe-security/');
-            if ($prIsCC) {
-                $remoteName = 'cc';
-            } elseif ($prIsSecurity) {
-                $remoteName = 'security';
-            } else {
-                $remoteName = 'pr';
-            }
-
-            $this->outputSubStep('Setting remote ' . $details['remote'] . ' as "' . $remoteName . '" and checking out branch ' . $details['prBranch']);
+            $this->outputSubStep('Setting remote ' . $details['remote'] . ' as "' . $details['remoteName'] . '" and checking out branch ' . $details['prBranch']);
 
             // Try to add dependency if it's not there already
             $prPath = Path::join($this->projectRoot, 'vendor', $composerName);
@@ -335,9 +323,9 @@ class Create extends BaseCommand
 
             try {
                 $gitRepo = new Repository($prPath);
-                $gitRepo->run('remote', ['add', $remoteName, $details['remote']]);
-                $gitRepo->run('fetch', [$remoteName]);
-                $gitRepo->run('checkout', ["$remoteName/" . $details['prBranch'], '--track', '--no-guess']);
+                $gitRepo->run('remote', ['add', $details['remoteName'], $details['remote']]);
+                $gitRepo->run('fetch', [$details['remoteName']]);
+                $gitRepo->run('checkout', ["{$details['remoteName']}/" . $details['prBranch'], '--track', '--no-guess']);
             } catch (ProcessException $e) {
                 $this->failCheckout($composerName, $success);
                 continue;
