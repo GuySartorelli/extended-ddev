@@ -11,6 +11,26 @@ use RuntimeException;
 class GitHubService
 {
     /**
+     * Get the full set of details of a GitHub repository from a URL or org/repo#123 formatted string.
+     *
+     * If the identifier includes a pull request reference, details about the pull request are aso included.
+     */
+    public static function getRepositoryDetails(string $repoIdentifier, string $githubToken = ''): array
+    {
+        $client = new GithubClient();
+        if ($githubToken) {
+            $client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
+        }
+        $parsed = static::parseIdentifier($repoIdentifier);
+        return [
+            ...$parsed,
+            'composerName' => static::getComposerNameForIdentifier($client, $parsed),
+            'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
+            'pr' => isset($parsed['pr']) ? static::getPRDetails($client, $parsed) : null,
+        ];
+    }
+
+    /**
      * Get the full set of details of a GitHub pull request from an array of PR URLs or org/repo#123 formatted strings.
      */
     public static function getPullRequestDetails(array $rawPRs, string $githubToken = ''): array
