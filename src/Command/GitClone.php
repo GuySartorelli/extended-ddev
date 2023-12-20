@@ -50,7 +50,7 @@ class GitClone extends BaseCommand
             $this->error("$cloneDir does not exist or is not a directory. Check your EDDEV_CLONE_DIR environment variable.");
             return self::FAILURE;
         }
-        $this->outputStep("Cloning {$this->repoDetails['composerName']} into {$cloneDir}");
+        $this->outputStep("Cloning {$this->repoDetails['outputName']} into {$cloneDir}");
 
         $repoPath = Path::join($cloneDir, preg_replace('/^silverstripe-/', '', $this->repoDetails['repo']));
         Git::cloneRepository($repoPath, $this->repoDetails['cloneUri']);
@@ -70,7 +70,7 @@ class GitClone extends BaseCommand
             }
         }
 
-        $this->success("{$this->repoDetails['composerName']} cloned successfully.");
+        $this->success("{$this->repoDetails['outputName']} cloned successfully.");
         return self::SUCCESS;
     }
 

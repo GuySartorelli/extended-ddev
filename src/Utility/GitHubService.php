@@ -22,9 +22,13 @@ class GitHubService
             $client->authenticate($githubToken, AuthMethod::ACCESS_TOKEN);
         }
         $parsed = static::parseIdentifier($repoIdentifier);
+        $nameForOutput = "{$parsed['org']}/{$parsed['repo']}";
+        try {
+            $nameForOutput = static::getComposerNameForIdentifier($client, $parsed);
+        } catch (RuntimeException) {}
         return [
             ...$parsed,
-            'composerName' => static::getComposerNameForIdentifier($client, $parsed),
+            'outputName' => $nameForOutput,
             'cloneUri' => "git@github.com:{$parsed['org']}/{$parsed['repo']}.git",
             'pr' => isset($parsed['pr']) ? static::getPRDetails($client, $parsed) : null,
         ];
@@ -84,7 +88,11 @@ class GitHubService
         } catch (GitHubRuntimeException $e) {
             throw new RuntimeException("Couldn't find composer name for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: {$e->getMessage()}");
         }
-        return json_decode($composerJson, true)['name'];
+        $composerName = json_decode($composerJson, true)['name'] ?? '';
+        if (!$composerName) {
+            throw new RuntimeException("Couldn't find composer name for {$parsedIdentifier['org']}/{$parsedIdentifier['repo']}: No 'name' key in composer.json file");
+        }
+        return $composerName;
     }
 
     private static function getPRDetails(GithubClient $client, array $parsedIdentifier): array
