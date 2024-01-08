@@ -58,7 +58,7 @@ class Create extends BaseCommand
      * Characters that cannot be used for an environment name
      * @TODO check if this is still relevant
      */
-    protected static string $invalidEnvNameChars = ' !@#$%^&*()"\',.<>/?:;\\';
+    protected static string $invalidEnvNameChars = ' !@#$%^&*()"\',._<>/?:;\\';
 
     private array $composerArgs = [];
 
@@ -508,10 +508,10 @@ class Create extends BaseCommand
         // Normalise constraints to remove stability flags
         $constraint = preg_replace('/^(dev-|v(?=\d))|-dev|(#|@).*?$/', '', $this->input->getOption('constraint'));
         $constraint = preg_replace($invalidCharsRegex, '-', trim($constraint, '~^'));
-        $name = $recipe . '_' . $constraint;
+        $name = $recipe . '--' . $constraint;
 
         if (!empty($this->input->getOption('pr'))) {
-            $name .= '_' . 'with-prs';
+            $name .= '--' . 'with-prs';
         }
 
         return $name;
