@@ -6,7 +6,6 @@ use Gitonomy\Git\Admin as Git;
 use Gitonomy\Git\Exception\ProcessException;
 use Gitonomy\Git\Repository;
 use GuySartorelli\ExtendedDdev\Utility\GitHubService;
-use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
