@@ -69,7 +69,7 @@ class GitHubService
     private static function parseIdentifier(string $identifier): array
     {
         $identifier = preg_replace('#^(https?://(www\.)?github\.com/|git@github\.com:)#', '', $identifier);
-        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9_-]*)(?>(?>/pull/|#)(?<pr>[0-9]+))?@', $identifier, $matches)) {
+        if (!preg_match('@(?<org>[a-zA-Z0-9_-]*)/(?<repo>[a-zA-Z0-9._-]*)(?>(?>/pull/|#)(?<pr>[0-9]+))?@', $identifier, $matches)) {
             throw new InvalidArgumentException("'$identifier' is not a valid GitHub repository reference.");
         }
         if (empty($matches['org']) || empty($matches['repo'])) {
