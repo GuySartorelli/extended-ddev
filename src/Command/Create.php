@@ -260,6 +260,7 @@ class Create extends BaseCommand
         // Install optional modules as appropriate
         $this->includeOptionalModule('silverstripe/dynamodb:' . $this->input->getOption('constraint'), (bool) $this->input->getOption('include-dynamodb'));
         $this->includeOptionalModule('behat/mink-selenium2-driver', isDev: true);
+        $this->includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
         $this->includeOptionalModule('silverstripe/frameworktest', (bool) $this->input->getOption('include-frameworktest'), isDev: true);
         $this->includeOptionalModule('silverstripe/recipe-testing', (bool) $this->input->getOption('include-recipe-testing'), isDev: true);
         // Always include dev docs if we're not using sink, which has it as a dependency
