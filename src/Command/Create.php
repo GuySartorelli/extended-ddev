@@ -165,18 +165,14 @@ class Create extends BaseCommand
     /**
      * Copy files to the project. Has to be done AFTER composer create
      */
-    private function copyProjectFiles(bool $onlyDdevDir = false): bool
+    private function copyProjectFiles(): bool
     {
-        if ($onlyDdevDir) {
-            $this->outputSubStep('Copying extra .ddev files to project');
-        } else {
-            $this->outputStep('Copying .eddev files to project');
-        }
+        $this->outputStep('Copying .eddev files to project');
         try {
             // Copy files through (config, .env, etc)
             $this->filesystem->mirror(
-                Path::join(__DIR__, '../..', 'copy-to-project', $onlyDdevDir ? '.ddev' : ''),
-                Path::join($this->projectRoot, $onlyDdevDir ? '.ddev' : ''),
+                Path::join(__DIR__, '../..', 'copy-to-project'),
+                $this->projectRoot,
                 options: ['override' => true]
             );
         } catch (IOExceptionInterface $e) {
@@ -206,6 +202,7 @@ class Create extends BaseCommand
             'config', [
                 $db,
                 '--webserver-type=apache-fpm',
+                '--webimage-extra-packages=php${DDEV_PHP_VERSION}-tidy',
                 '--project-type=php',
                 '--php-version=' . $this->input->getOption('php-version'),
                 '--project-name=' . $this->input->getArgument('env-name'),
@@ -229,11 +226,6 @@ class Create extends BaseCommand
         $hasDbAdmin = DDevHelper::runInteractiveOnVerbose('get', ['ddev/ddev-adminer'], $this->output, [$this, 'handleDdevOutput']);
         if (!$hasDbAdmin) {
             $this->warning('Could not add DDEV addon <options=bold>ddev/ddev-adminer</> - add that manually.');
-        }
-
-        $success = $this->copyProjectFiles(true);
-        if (!$success) {
-            return false;
         }
 
         DDevHelper::runInteractiveOnVerbose('start', [], $this->output, [$this, 'handleDdevOutput']);

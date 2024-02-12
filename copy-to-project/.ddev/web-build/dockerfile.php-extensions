@@ -1,3 +1,0 @@
-# Installs additional PHP extensions necessary for Silverstripe CMS development
-
-RUN apt-get update && apt-get install -y ${DDEV_PHP_VERSION}-tidy;
