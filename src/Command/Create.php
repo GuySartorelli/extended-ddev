@@ -120,7 +120,29 @@ class Create extends BaseCommand
         }
 
         // Don't fail if we didn't get PRs in - we can add those manually if needs be.
-        $this->handlePRs();
+        if (!empty($this->prs) && $this->input->getOption('pr-has-deps')) {
+            // If PRs have dependencies, handle that before composer isntall.
+            $this->handlePRsWithDeps();
+        }
+
+        // Run composer install
+        if (in_array('--no-install', $this->input->getOption('composer-option'))) {
+            $this->warning('Opted not to run `composer install` - dont forget to run that!');
+        } else {
+            $this->outputStep('Running composer install now that dependencies have been added');
+            $composerArgs = $this->prepareComposerCommand('install');
+            $success = DDevHelper::runInteractiveOnVerbose('composer', $composerArgs, $this->output, [$this, 'handleDdevOutput']);
+            if (!$success) {
+                $this->error('Couldn\'t run composer install.');
+                return false;
+            }
+        }
+
+        // Don't fail if we didn't get PRs in - we can add those manually if needs be.
+        if (!empty($this->prs) && !$this->input->getOption('pr-has-deps')) {
+            // If PRs don't have deps, handle it _after_ composer install so we can checkout the right branch
+            $this->checkoutPRs();
+        }
 
         $success = $this->copyProjectFiles();
         if (!$success) {
@@ -245,11 +267,15 @@ class Create extends BaseCommand
             $this->error('Couldn\'t create composer project.');
             return false;
         }
-
         $this->endProgressBar();
-        $this->outputStep('Installing additional composer dependencies');
+
+        // Add allowed plugins, in case the recipe you're using doesn't have them in its composer config
+        DDevHelper::run('composer', ['config', 'allow-plugins.composer/installers', 'true']);
+        DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/recipe-plugin', 'true']);
+        DDevHelper::run('composer', ['config', 'allow-plugins.silverstripe/vendor-plugin', 'true']);
 
         // Install optional modules as appropriate
+        $this->outputStep('Adding additional composer dependencies');
         $this->includeOptionalModule('silverstripe/dynamodb:' . $this->input->getOption('constraint'), (bool) $this->input->getOption('include-dynamodb'));
         $this->includeOptionalModule('behat/mink-selenium2-driver', isDev: true);
         $this->includeOptionalModule('friends-of-behat/mink-extension', isDev: true); // for CMS 4
@@ -266,30 +292,14 @@ class Create extends BaseCommand
         return $success;
     }
 
-    private function handlePRs(): bool
+    private function handlePRsWithDeps(): bool
     {
-        if (empty($this->prs)) {
-            return true;
-        }
-
-        if (!$this->input->getOption('pr-has-deps')) {
-            return $this->checkoutPRs();
-        }
-
         // Add prs to composer.json
         $this->outputStep('Adding PRs to composer.json so we can pull in their dependencies');
         $composerService = new ComposerJsonService($this->projectRoot);
         $composerService->addForks($this->prs);
         $composerService->addForkedDeps($this->prs);
 
-        // Run composer install
-        $this->outputStep('Running composer install now that dependencies have been defined');
-        $composerArgs = $this->prepareComposerCommand('install');
-        $success = DDevHelper::runInteractiveOnVerbose('composer', $composerArgs, $this->output, [$this, 'handleDdevOutput']);
-        if (!$success) {
-            $this->error('Couldn\'t run composer install.');
-            return false;
-        }
         $this->endProgressBar();
         return true;
     }
@@ -342,6 +352,7 @@ class Create extends BaseCommand
             ...$composerArgs
         ];
         if ($commandType === 'create') {
+            $command[] = '--no-scripts';
             $command[] = $this->input->getOption('recipe') . ':' . $this->input->getOption('constraint');
         }
         return $command;
@@ -381,13 +392,10 @@ class Create extends BaseCommand
         }
         $args = $this->composerArgs;
 
-        // Don't install on create if a PR has dependencies
-        if ($commandType === 'create' && $this->input->getOption('pr-has-deps') && !empty($this->prs)) {
-            $args[] = '--no-install';
-        }
-
-        // composer install can't take --no-audit, but we don't want to include audits in other commands.
+        // `composer install` can't take --no-audit, but we don't want to include audits in other commands.
+        // We also don't want to install until the install step.
         if ($commandType !== 'install') {
+            $args[] = '--no-install';
             $args[] = '--no-audit';
         }
 
