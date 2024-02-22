@@ -1,3 +1,6 @@
+> [!CAUTION]
+> OBSOLETE! Use DDEV directly with [global commands](https://github.com/GuySartorelli/my-ddev-commands) instead.
+
 # Extended DDEV
 
 This is a very opinionated CLI wrapped around DDEV to handle repetitive processes I do all day every day as a maintainer of Silverstripe CMS.
